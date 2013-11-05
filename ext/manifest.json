@@ -23,7 +23,9 @@
   "permissions": [
     "tabs",
     "http://*/*",
-    "https://*/*"
+    "https://*/*",
+    "background", 
+    "power"
   ],
   "omnibox": {
     "keyword": "extensionizr"
@@ -34,7 +36,8 @@
         "https://www.google.com/*"
       ],
       "js": [
-        "src/inject/inject.js"
+        "src/inject/inject.js",
+        "js/jquery/jquery.js"
       ]
     }
   ]
