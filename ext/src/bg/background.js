@@ -21,13 +21,10 @@ function toQueryString(obj) {
   return parts.join('&');    
 };
 
+
 JCC = {
     config:{// Base URI for Web service
-        yql_base_uri : "http://query.yahooapis.com/v1/yql",
-
-        // Create a variable to make results available
-        // in the global namespace
-        yql_results : "",
+        yql_base_uri : "http://query.yahooapis.com/v1/public/yql",
 
         // Create a YQL query to get geo data for the
         // San Francisco International Airport
@@ -36,11 +33,67 @@ JCC = {
      },
 
     initialize: function(){
-        $.getJSON(JCC.config.yql_base_uri+"?"+encodeURIComponent(JCC.config.yql_query)+'&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=').done(function(a) {
-            console.log(a);
+        JCC.webdb.open();
+        JCC.webdb.createTable();
+        $.ajax({
+          url:JCC.config.yql_base_uri,
+          type: 'POST',
+          data:'q='+encodeURIComponent(JCC.config.yql_query)+'&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=',
+          dataType:'json'
+        }).done(function(a) {
+            for (var i = a.query.count - 1; i >= 0; i--) {
+              var rateInfo = a.query.results.rate[i];
+              JCC.webdb.insertTable(rateInfo);
+            };
+            JCC.webdb.fetchAll(JCC.renderData);
         }).fail(function() {}).always(function() {});
     }
 
+};
+
+JCC.webdb = {
+  db:null,
+  open:function(){
+    var dbSize = 5 * 1024 * 1024; // 5MB
+    JCC.webdb.db = openDatabase("CurrencyDB", "1.0.0", "Store Currency Data", dbSize);
+    
+  },
+  onError:function(tx, e){
+    alert("There has been an error: " + e.message);
+  },
+  onSuccess:function(tx, e){
+    // JCC.webdb.getAllItems(loadTodoItems);
+  },
+  createTable:function(){
+    var db = JCC.webdb.db;
+    db.transaction(function(tx) {
+      tx.executeSql("CREATE TABLE IF NOT EXISTS " +
+                    "rate(ID INTEGER PRIMARY KEY ASC, Ask TEXT, Bid TEXT, Date TEXT, Name TEXT, Rate TEXT, Time TEXT, idx TEXT)", []);
+    });
+  },
+  insertTable:function(rateInfo){
+    var db = JCC.webdb.db;
+    db.transaction(function(tx) {
+      tx.executeSql("INSERT INTO " +
+                    "rate(Ask, Bid, Date, Name, Rate, Time, idx) VALUES(?,?,?,?,?,?,?)", 
+                    [rateInfo.Ask,rateInfo.Bid,rateInfo.Date,rateInfo.Name,rateInfo.Rate,rateInfo.Time,rateInfo.id],
+                    JCC.webdb.onSuccess,
+                    JCC.webdb.onError);
+    });
+  },
+  fetchAll:function(renderFunc){
+    var db = JCC.webdb.db;
+    db.transaction(function(tx) {
+      tx.executeSql("SELECT * FROM rate WHERE idx='HKDCNY' ORDER BY ID DESC LIMIT 1", [], renderFunc,
+        JCC.webdb.onError);
+    });
+  }
+};
+
+JCC.renderData=function(tx, rs){
+  for (var i=0; i < rs.rows.length; i++) {
+    console.log(rs.rows.item(i));
+  }
 };
 
 document.addEventListener("DOMContentLoaded", function() {

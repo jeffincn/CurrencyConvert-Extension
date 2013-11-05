@@ -22,18 +22,22 @@
   },
   "permissions": [
     "tabs",
+    "activeTab",
     "http://*/*",
     "https://*/*",
     "background", 
-    "power"
+    "power",
+    "unlimitedStorage"
   ],
   "omnibox": {
     "keyword": "extensionizr"
   },
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
   "content_scripts": [
     {
       "matches": [
-        "https://www.google.com/*"
+        "https://*/*",
+        "http://*/*"
       ],
       "js": [
         "src/inject/inject.js",
