@@ -81,10 +81,38 @@ JCC.webdb = {
                     JCC.webdb.onError);
     });
   },
-  fetchAll:function(renderFunc){
+  fetchAll:function(callback){
     var db = JCC.webdb.db;
     db.transaction(function(tx) {
-      tx.executeSql("SELECT * FROM rate WHERE idx='HKDCNY' ORDER BY ID DESC LIMIT 1", [], renderFunc,
+      tx.executeSql("SELECT * FROM rate ORDER BY ID DESC", [], callback,
+        JCC.webdb.onError);
+    });
+  },
+  deleteOneByID:function(id, callback){
+    var db = JCC.webdb.db;
+    db.transaction(function(tx) {
+      tx.executeSql("DELETE FROM rate WHERE ID="+id, [], callback,
+        JCC.webdb.onError);
+    });
+  },
+  deleteOneByIdx:function(idx, callback){
+    var db = JCC.webdb.db;
+    db.transaction(function(tx) {
+      tx.executeSql("DELETE FROM rate WHERE idx='"+idx+"'", [], callback,
+        JCC.webdb.onError);
+    });
+  },
+  dropTable:function(callback){
+    var db = JCC.webdb.db;
+    db.transaction(function(tx) {
+      tx.executeSql("DROP TABLE rate", [], callback,
+        JCC.webdb.onError);
+    });
+  },
+  getLastOne:function(idx, callback){
+    var db = JCC.webdb.db;
+    db.transaction(function(tx) {
+      tx.executeSql("SELECT * FROM rate WHERE idx='"+idx+"' ORDER BY ID DESC LIMIT 1", [], callback,
         JCC.webdb.onError);
     });
   }
